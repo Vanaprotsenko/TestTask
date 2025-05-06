@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    volumes:
+      - ./app:/app
+      - ./dumps:/app/dumps
+    depends_on:
+      - db
+    env_file:
+      - .env
+    command: >
+      bash -c "echo 'Waiting for database...' &&
+              sleep 5 &&
+              python manage.py migrate && 
+              python manage.py collectstatic --noinput &&
+              echo 'AutoRia Scraper started successfully!' &&
+              echo 'Web interface available at http://localhost:8000/admin/' &&
+              echo 'Default admin credentials: admin/admin' &&
+              python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:13
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    restart: always
+
+  celery:
+    build: .
+    command: celery -A core worker -l info
+    volumes:
+      - ./app:/app
+      - ./dumps:/app/dumps
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+  celery-beat:
+    build: .
+    command: celery -A core beat -l info
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
