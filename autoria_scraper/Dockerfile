@@ -5,19 +5,14 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
 COPY ./app /app/
-
-# Create dumps directory if it doesn't exist
 RUN mkdir -p /app/dumps
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

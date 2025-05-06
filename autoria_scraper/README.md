@@ -1,34 +1,34 @@
 # AutoRia Scraper
 
-Приложение для периодического скрапинга платформы AutoRia (б/у авто) с сохранением данных в PostgreSQL и автоматическим созданием ежедневных дампов базы данных.
+Application for periodic scraping of the AutoRia platform (used cars) with data storage in PostgreSQL and automatic creation of daily database dumps.
 
-## Структура проекта
+## Project Structure
 
 ```
 autoria_scraper/
-├── app/                    # Django приложение
-│   ├── core/               # Основные настройки Django
-│   └── scraper/            # Приложение для скрапинга
-│       ├── management/     # Команды Django для управления скрапером
+├── app/                    # Django application
+│   ├── core/               # Core Django settings
+│   └── scraper/            # Scraping application
+│       ├── management/     # Django commands for scraper management
 │       │   └── commands/   
-│       ├── admin.py        # Настройки админ-панели
-│       ├── apps.py         # Конфигурация приложения
-│       ├── models.py       # Модели данных
-│       ├── scraper.py      # Основной код скрапера
-│       ├── tasks.py        # Задачи Celery
-│       └── views.py        # Представления (не используются в текущей версии)
-├── dumps/                  # Папка для хранения дампов базы данных
-├── .env                    # Файл с настройками приложения
-├── .gitignore              # Файлы, которые следует игнорировать в git
-├── docker-compose.yml      # Настройки для Docker Compose
-├── Dockerfile              # Инструкции для сборки Docker-образа
-├── README.md               # Документация проекта
-└── requirements.txt        # Зависимости Python
+│       ├── admin.py        # Admin panel settings
+│       ├── apps.py         # Application configuration
+│       ├── models.py       # Data models
+│       ├── scraper.py      # Main scraper code
+│       ├── tasks.py        # Celery tasks
+│       └── views.py        # Views (not used in current version)
+├── dumps/                  # Folder for storing database dumps
+├── .env                    # Application settings file
+├── .gitignore              # Files to be ignored in git
+├── docker-compose.yml      # Docker Compose settings
+├── Dockerfile              # Instructions for building Docker image
+├── README.md               # Project documentation
+└── requirements.txt        # Python dependencies
 ```
 
-## Настройки приложения
+## Application Settings
 
-Настройки приложения хранятся в файле `.env` в корне проекта. Пример настроек:
+Application settings are stored in the `.env` file in the project root. Example settings:
 
 ```
 # Django settings
@@ -54,93 +54,93 @@ SCRAPER_RUN_TIME=12:00
 DUMP_RUN_TIME=13:00
 ```
 
-## Запуск приложения
+## Application Launch
 
-### Через Docker Compose (рекомендуемый способ)
+### Via Docker Compose (recommended)
 
-1. Установите Docker и Docker Compose, если они еще не установлены
-2. Склонируйте репозиторий и перейдите в директорию проекта
-3. Создайте файл `.env` на основе примера выше
-4. Запустите приложение командой:
+1. Install Docker and Docker Compose if not already installed
+2. Clone the repository and navigate to the project directory
+3. Create an `.env` file based on the example above
+4. Launch the application with the command:
 
 ```bash
 docker-compose up -d
 ```
 
-### Ручной запуск
+### Manual Launch
 
-1. Установите PostgreSQL и Redis
-2. Создайте базу данных для приложения
-3. Установите зависимости Python:
+1. Install PostgreSQL and Redis
+2. Create a database for the application
+3. Install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Создайте файл `.env` на основе примера выше
-5. Перейдите в директорию `app` и выполните миграции:
+4. Create an `.env` file based on the example above
+5. Navigate to the `app` directory and run migrations:
 
 ```bash
 cd app
 python manage.py migrate
 ```
 
-6. Запустите Django-сервер:
+6. Launch the Django server:
 
 ```bash
 python manage.py runserver
 ```
 
-7. В отдельном терминале запустите Celery-worker:
+7. In a separate terminal, launch the Celery worker:
 
 ```bash
 cd app
 celery -A core worker -l info
 ```
 
-8. В отдельном терминале запустите Celery-beat:
+8. In a separate terminal, launch Celery beat:
 
 ```bash
 cd app
 celery -A core beat -l info
 ```
 
-## Ручной запуск задач
+## Manual Task Execution
 
-### Запуск скрапера вручную
+### Run the scraper manually
 
 ```bash
 python manage.py run_scraper [--max-pages MAX_PAGES] [--url URL]
 ```
 
-### Создание дампа базы данных вручную
+### Create a database dump manually
 
 ```bash
 python manage.py create_dump
 ```
 
-## Модель данных
+## Data Model
 
-Основная модель данных - `Car` со следующими полями:
+The main data model is `Car` with the following fields:
 
-- `url` (строка) - URL объявления
-- `title` (строка) - Заголовок объявления
-- `price_usd` (число) - Цена в долларах США
-- `odometer` (число) - Пробег автомобиля в километрах
-- `username` (строка) - Имя продавца
-- `phone_number` (строка) - Номер телефона продавца
-- `image_url` (строка) - URL главного изображения
-- `images_count` (число) - Количество изображений
-- `car_number` (строка) - Номер автомобиля
-- `car_vin` (строка) - VIN-код автомобиля
-- `location` (строка) - Местоположение
-- `datetime_found` (дата/время) - Дата и время создания записи
+- `url` (string) - Listing URL
+- `title` (string) - Listing title
+- `price_usd` (number) - Price in US dollars
+- `odometer` (number) - Vehicle mileage in kilometers
+- `username` (string) - Seller's name
+- `phone_number` (string) - Seller's phone number
+- `image_url` (string) - URL of the main image
+- `images_count` (number) - Number of images
+- `car_number` (string) - Vehicle registration number
+- `car_vin` (string) - Vehicle VIN code
+- `location` (string) - Location
+- `datetime_found` (date/time) - Record creation date and time
 
-## Периодические задачи
+## Periodic Tasks
 
-Приложение настроено на автоматический запуск следующих задач:
+The application is configured to automatically run the following tasks:
 
-1. Скрапинг данных с AutoRia - запускается ежедневно в указанное в настройках время (по умолчанию в 12:00)
-2. Создание дампа базы данных - запускается ежедневно в указанное в настройках время (по умолчанию в 13:00)
+1. Scraping data from AutoRia - runs daily at the time specified in the settings (default 12:00)
+2. Creating a database dump - runs daily at the time specified in the settings (default 13:00)
 
-Время запуска задач можно изменить в файле `.env`.
+The task execution time can be changed in the `.env` file.
